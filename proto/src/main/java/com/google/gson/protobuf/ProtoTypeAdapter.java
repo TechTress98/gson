@@ -16,10 +16,11 @@
 
 package com.google.gson.protobuf;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.MapMaker;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -64,7 +65,6 @@ import java.util.concurrent.ConcurrentMap;
  *   string os_build_id = 1 [(serialized_name) = "osBuildID"];
  * }
  * </pre>
- * <p>
  *
  * @author Inderjeet Singh
  * @author Emmanuel Cron
@@ -97,14 +97,15 @@ public class ProtoTypeAdapter
 
     private Builder(EnumSerialization enumSerialization, CaseFormat fromFieldNameFormat,
         CaseFormat toFieldNameFormat) {
-      this.serializedNameExtensions = new HashSet<Extension<FieldOptions, String>>();
-      this.serializedEnumValueExtensions = new HashSet<Extension<EnumValueOptions, String>>();
+      this.serializedNameExtensions = new HashSet<>();
+      this.serializedEnumValueExtensions = new HashSet<>();
       setEnumSerialization(enumSerialization);
       setFieldNameSerializationFormat(fromFieldNameFormat, toFieldNameFormat);
     }
 
+    @CanIgnoreReturnValue
     public Builder setEnumSerialization(EnumSerialization enumSerialization) {
-      this.enumSerialization = checkNotNull(enumSerialization);
+      this.enumSerialization = requireNonNull(enumSerialization);
       return this;
     }
 
@@ -123,6 +124,7 @@ public class ProtoTypeAdapter
      * n__id_ct       nIdCt
      * }</pre>
      */
+    @CanIgnoreReturnValue
     public Builder setFieldNameSerializationFormat(CaseFormat fromFieldNameFormat,
         CaseFormat toFieldNameFormat) {
       this.protoFormat = fromFieldNameFormat;
@@ -142,9 +144,10 @@ public class ProtoTypeAdapter
      * ...the adapter will serialize the field using '{@code appId}' instead of the default '
      * {@code clientAppId}'. This lets you customize the name serialization of any proto field.
      */
+    @CanIgnoreReturnValue
     public Builder addSerializedNameExtension(
         Extension<FieldOptions, String> serializedNameExtension) {
-      serializedNameExtensions.add(checkNotNull(serializedNameExtension));
+      serializedNameExtensions.add(requireNonNull(serializedNameExtension));
       return this;
     }
 
@@ -167,9 +170,10 @@ public class ProtoTypeAdapter
      * Note that you need to set the enum serialization of this adapter to
      * {@link EnumSerialization#NAME}, otherwise these annotations will be ignored.
      */
+    @CanIgnoreReturnValue
     public Builder addSerializedEnumValueExtension(
         Extension<EnumValueOptions, String> serializedEnumValueExtension) {
-      serializedEnumValueExtensions.add(checkNotNull(serializedEnumValueExtension));
+      serializedEnumValueExtensions.add(requireNonNull(serializedEnumValueExtension));
       return this;
     }
 
@@ -280,7 +284,7 @@ public class ProtoTypeAdapter
               if (jsonElement.isJsonArray()) {
                 // Handling array
                 Collection<EnumValueDescriptor> enumCollection =
-                    new ArrayList<EnumValueDescriptor>(jsonElement.getAsJsonArray().size());
+                    new ArrayList<>(jsonElement.getAsJsonArray().size());
                 for (JsonElement element : jsonElement.getAsJsonArray()) {
                   enumCollection.add(
                       findValueByNameAndExtension(fieldDescriptor.getEnumType(), element));

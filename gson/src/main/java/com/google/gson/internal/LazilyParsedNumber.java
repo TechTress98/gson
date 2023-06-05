@@ -26,6 +26,7 @@ import java.math.BigDecimal;
  *
  * @author Inderjeet Singh
  */
+@SuppressWarnings("serial") // ignore warning about missing serialVersionUID
 public final class LazilyParsedNumber extends Number {
   private final String value;
 
@@ -97,7 +98,7 @@ public final class LazilyParsedNumber extends Number {
     }
     if (obj instanceof LazilyParsedNumber) {
       LazilyParsedNumber other = (LazilyParsedNumber) obj;
-      return value == other.value || value.equals(other.value);
+      return value.equals(other.value);
     }
     return false;
   }

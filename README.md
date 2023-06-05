@@ -19,7 +19,7 @@ There are a few open-source projects that can convert Java objects to JSON. Howe
 Gradle:
 ```gradle
 dependencies {
-  implementation 'com.google.code.gson:gson:2.9.0'
+  implementation 'com.google.code.gson:gson:2.10.1'
 }
 ```
 
@@ -28,7 +28,7 @@ Maven:
 <dependency>
   <groupId>com.google.code.gson</groupId>
   <artifactId>gson</artifactId>
-  <version>2.9.0</version>
+  <version>2.10.1</version>
 </dependency>
 ```
 
@@ -57,9 +57,10 @@ see [`GsonBuilder.disableJdkUnsafe()`](https://javadoc.io/doc/com.google.code.gs
 
 ### Documentation
   * [API Javadoc](https://www.javadoc.io/doc/com.google.code.gson/gson): Documentation for the current release
-  * [User guide](https://github.com/google/gson/blob/master/UserGuide.md): This guide contains examples on how to use Gson in your code.
-  * [Change log](https://github.com/google/gson/blob/master/CHANGELOG.md): Changes in the recent versions
-  * [Design document](https://github.com/google/gson/blob/master/GsonDesignDocument.md): This document discusses issues we faced while designing Gson. It also includes a comparison of Gson with other Java libraries that can be used for Json conversion
+  * [User guide](UserGuide.md): This guide contains examples on how to use Gson in your code
+  * [Troubleshooting guide](Troubleshooting.md): Describes how to solve common issues when using Gson
+  * [Releases and change log](https://github.com/google/gson/releases): Latest releases and changes in these versions; for older releases see [`CHANGELOG.md`](CHANGELOG.md)
+  * [Design document](GsonDesignDocument.md): This document discusses issues we faced while designing Gson. It also includes a comparison of Gson with other Java libraries that can be used for Json conversion
 
 Please use the ['gson' tag on StackOverflow](https://stackoverflow.com/questions/tagged/gson) or the [google-gson Google group](https://groups.google.com/group/google-gson) to discuss Gson or to post questions.
 
@@ -67,6 +68,22 @@ Please use the ['gson' tag on StackOverflow](https://stackoverflow.com/questions
   * [Gson Tutorial](https://www.studytrails.com/java/json/java-google-json-introduction/) by `StudyTrails`
   * [Gson Tutorial Series](https://futurestud.io/tutorials/gson-getting-started-with-java-json-serialization-deserialization) by `Future Studio`
   * [Gson API Report](https://abi-laboratory.pro/java/tracker/timeline/gson/)
+
+### Building
+
+Gson uses Maven to build the project:
+```
+mvn clean verify
+```
+
+JDK 11 or newer is required for building, JDK 17 is recommended.
+
+### Contributing
+
+See the [contributing guide](https://github.com/google/.github/blob/master/CONTRIBUTING.md).  
+Please perform a quick search to check if there are already existing issues or pull requests related to your contribution.
+
+Keep in mind that Gson is in maintenance mode. If you want to add a new feature, please first search for existing GitHub issues, or create a new one to discuss the feature and get feedback.
 
 ### License
 

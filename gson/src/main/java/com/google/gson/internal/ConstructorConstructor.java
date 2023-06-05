@@ -61,6 +61,33 @@ public final class ConstructorConstructor {
     this.reflectionFilters = reflectionFilters;
   }
 
+  /**
+   * Check if the class can be instantiated by Unsafe allocator. If the instance has interface or abstract modifiers
+   * return an exception message.
+   * @param c instance of the class to be checked
+   * @return if instantiable {@code null}, else a non-{@code null} exception message
+   */
+  static String checkInstantiable(Class<?> c) {
+    int modifiers = c.getModifiers();
+    if (Modifier.isInterface(modifiers)) {
+      return "Interfaces can't be instantiated! Register an InstanceCreator"
+          + " or a TypeAdapter for this type. Interface name: " + c.getName();
+    }
+    if (Modifier.isAbstract(modifiers)) {
+      // R8 performs aggressive optimizations where it removes the default constructor of a class
+      // and makes the class `abstract`; check for that here explicitly
+      if (c.getDeclaredConstructors().length == 0) {
+        return "Abstract classes can't be instantiated! Adjust the R8 configuration or register"
+            + " an InstanceCreator or a TypeAdapter for this type. Class name: " + c.getName()
+            + "\nSee " + TroubleshootingGuide.createUrl("r8-abstract-class");
+      }
+
+      return "Abstract classes can't be instantiated! Register an InstanceCreator"
+          + " or a TypeAdapter for this type. Class name: " + c.getName();
+    }
+    return null;
+  }
+
   public <T> ObjectConstructor<T> get(TypeToken<T> typeToken) {
     final Type type = typeToken.getType();
     final Class<? super T> rawType = typeToken.getRawType();
@@ -110,7 +137,7 @@ public final class ConstructorConstructor {
 
     // Check whether type is instantiable; otherwise ReflectionAccessFilter recommendation
     // of adjusting filter suggested below is irrelevant since it would not solve the problem
-    final String exceptionMessage = UnsafeAllocator.checkInstantiable(rawType);
+    final String exceptionMessage = checkInstantiable(rawType);
     if (exceptionMessage != null) {
       return new ObjectConstructor<T>() {
         @Override public T construct() {
@@ -125,9 +152,9 @@ public final class ConstructorConstructor {
       // finally try unsafe
       return newUnsafeAllocator(rawType);
     } else {
-      final String message = "Unable to create instance of " + rawType + "; ReflectionAccessFilter "
-          + "does not permit using reflection or Unsafe. Register an InstanceCreator or a TypeAdapter "
-          + "for this type or adjust the access filter to allow using reflection.";
+      final String message = "Unable to create instance of " + rawType + "; ReflectionAccessFilter"
+          + " does not permit using reflection or Unsafe. Register an InstanceCreator or a TypeAdapter"
+          + " for this type or adjust the access filter to allow using reflection.";
       return new ObjectConstructor<T>() {
         @Override public T construct() {
           throw new JsonIOException(message);
@@ -200,10 +227,10 @@ public final class ConstructorConstructor {
         && (filterResult != FilterResult.BLOCK_ALL || Modifier.isPublic(constructor.getModifiers())));
 
     if (!canAccess) {
-      final String message = "Unable to invoke no-args constructor of " + rawType + "; "
-          + "constructor is not accessible and ReflectionAccessFilter does not permit making "
-          + "it accessible. Register an InstanceCreator or a TypeAdapter for this type, change "
-          + "the visibility of the constructor or adjust the access filter.";
+      final String message = "Unable to invoke no-args constructor of " + rawType + ";"
+          + " constructor is not accessible and ReflectionAccessFilter does not permit making"
+          + " it accessible. Register an InstanceCreator or a TypeAdapter for this type, change"
+          + " the visibility of the constructor or adjust the access filter.";
       return new ObjectConstructor<T>() {
         @Override public T construct() {
           throw new JsonIOException(message);
@@ -242,14 +269,17 @@ public final class ConstructorConstructor {
           @SuppressWarnings("unchecked") // T is the same raw type as is requested
           T newInstance = (T) constructor.newInstance();
           return newInstance;
-        } catch (InstantiationException e) {
-          // TODO: JsonParseException ?
-          throw new RuntimeException("Failed to invoke " + constructor + " with no args", e);
+        }
+        // Note: InstantiationException should be impossible because check at start of method made sure
+        //   that class is not abstract
+        catch (InstantiationException e) {
+          throw new RuntimeException("Failed to invoke constructor '" + ReflectionHelper.constructorToString(constructor) + "'"
+              + " with no args", e);
         } catch (InvocationTargetException e) {
-          // TODO: don't wrap if cause is unchecked!
+          // TODO: don't wrap if cause is unchecked?
           // TODO: JsonParseException ?
-          throw new RuntimeException("Failed to invoke " + constructor + " with no args",
-              e.getTargetException());
+          throw new RuntimeException("Failed to invoke constructor '" + ReflectionHelper.constructorToString(constructor) + "'"
+              + " with no args", e.getCause());
         } catch (IllegalAccessException e) {
           throw ReflectionHelper.createExceptionForUnexpectedIllegalAccess(e);
         }
@@ -277,25 +307,25 @@ public final class ConstructorConstructor {
       if (SortedSet.class.isAssignableFrom(rawType)) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new TreeSet<Object>();
+            return (T) new TreeSet<>();
           }
         };
       } else if (Set.class.isAssignableFrom(rawType)) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new LinkedHashSet<Object>();
+            return (T) new LinkedHashSet<>();
           }
         };
       } else if (Queue.class.isAssignableFrom(rawType)) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new ArrayDeque<Object>();
+            return (T) new ArrayDeque<>();
           }
         };
       } else {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new ArrayList<Object>();
+            return (T) new ArrayList<>();
           }
         };
       }
@@ -305,32 +335,32 @@ public final class ConstructorConstructor {
       if (ConcurrentNavigableMap.class.isAssignableFrom(rawType)) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new ConcurrentSkipListMap<Object, Object>();
+            return (T) new ConcurrentSkipListMap<>();
           }
         };
       } else if (ConcurrentMap.class.isAssignableFrom(rawType)) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new ConcurrentHashMap<Object, Object>();
+            return (T) new ConcurrentHashMap<>();
           }
         };
       } else if (SortedMap.class.isAssignableFrom(rawType)) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new TreeMap<Object, Object>();
+            return (T) new TreeMap<>();
           }
         };
-      } else if (type instanceof ParameterizedType && !(String.class.isAssignableFrom(
-          TypeToken.get(((ParameterizedType) type).getActualTypeArguments()[0]).getRawType()))) {
+      } else if (type instanceof ParameterizedType && !String.class.isAssignableFrom(
+          TypeToken.get(((ParameterizedType) type).getActualTypeArguments()[0]).getRawType())) {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new LinkedHashMap<Object, Object>();
+            return (T) new LinkedHashMap<>();
           }
         };
       } else {
         return new ObjectConstructor<T>() {
           @Override public T construct() {
-            return (T) new LinkedTreeMap<String, Object>();
+            return (T) new LinkedTreeMap<>();
           }
         };
       }
@@ -342,26 +372,35 @@ public final class ConstructorConstructor {
   private <T> ObjectConstructor<T> newUnsafeAllocator(final Class<? super T> rawType) {
     if (useJdkUnsafe) {
       return new ObjectConstructor<T>() {
-        private final UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
         @Override public T construct() {
           try {
             @SuppressWarnings("unchecked")
-            T newInstance = (T) unsafeAllocator.newInstance(rawType);
+            T newInstance = (T) UnsafeAllocator.INSTANCE.newInstance(rawType);
             return newInstance;
           } catch (Exception e) {
-            throw new RuntimeException(("Unable to create instance of " + rawType + ". "
-                + "Registering an InstanceCreator or a TypeAdapter for this type, or adding a no-args "
-                + "constructor may fix this problem."), e);
+            throw new RuntimeException(("Unable to create instance of " + rawType + "."
+                + " Registering an InstanceCreator or a TypeAdapter for this type, or adding a no-args"
+                + " constructor may fix this problem."), e);
           }
         }
       };
     } else {
-      final String exceptionMessage = "Unable to create instance of " + rawType + "; usage of JDK Unsafe "
-          + "is disabled. Registering an InstanceCreator or a TypeAdapter for this type, adding a no-args "
-          + "constructor, or enabling usage of JDK Unsafe may fix this problem.";
+      String exceptionMessage = "Unable to create instance of " + rawType + "; usage of JDK Unsafe"
+          + " is disabled. Registering an InstanceCreator or a TypeAdapter for this type, adding a no-args"
+          + " constructor, or enabling usage of JDK Unsafe may fix this problem.";
+
+      // Check if R8 removed all constructors
+      if (rawType.getDeclaredConstructors().length == 0) {
+        // R8 with Unsafe disabled might not be common enough to warrant a separate Troubleshooting Guide entry
+        exceptionMessage += " Or adjust your R8 configuration to keep the no-args constructor of the class.";
+      }
+
+      // Explicit final variable to allow usage in the anonymous class below
+      final String exceptionMessageF = exceptionMessage;
+
       return new ObjectConstructor<T>() {
         @Override public T construct() {
-          throw new JsonIOException(exceptionMessage);
+          throw new JsonIOException(exceptionMessageF);
         }
       };
     }

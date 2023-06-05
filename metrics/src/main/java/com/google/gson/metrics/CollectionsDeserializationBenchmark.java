@@ -33,42 +33,44 @@ import java.util.List;
  */
 public class CollectionsDeserializationBenchmark {
 
-  private static final Type LIST_TYPE = new TypeToken<List<BagOfPrimitives>>(){}.getType();
+  private static final TypeToken<List<BagOfPrimitives>> LIST_TYPE_TOKEN = new TypeToken<List<BagOfPrimitives>>(){};
+  private static final Type LIST_TYPE = LIST_TYPE_TOKEN.getType();
   private Gson gson;
   private String json;
 
   public static void main(String[] args) {
     NonUploadingCaliperRunner.run(CollectionsDeserializationBenchmark.class, args);
   }
-  
+
   @BeforeExperiment
   void setUp() throws Exception {
     this.gson = new Gson();
-    List<BagOfPrimitives> bags = new ArrayList<BagOfPrimitives>();
+    List<BagOfPrimitives> bags = new ArrayList<>();
     for (int i = 0; i < 100; ++i) {
       bags.add(new BagOfPrimitives(10L, 1, false, "foo"));
     }
     this.json = gson.toJson(bags, LIST_TYPE);
   }
 
-  /** 
+  /**
    * Benchmark to measure Gson performance for deserializing an object
    */
   public void timeCollectionsDefault(int reps) {
     for (int i=0; i<reps; ++i) {
-      gson.fromJson(json, LIST_TYPE);
+      gson.fromJson(json, LIST_TYPE_TOKEN);
     }
   }
 
   /**
    * Benchmark to measure deserializing objects by hand
    */
+  @SuppressWarnings("ModifiedButNotUsed")
   public void timeCollectionsStreaming(int reps) throws IOException {
     for (int i=0; i<reps; ++i) {
       StringReader reader = new StringReader(json);
       JsonReader jr = new JsonReader(reader);
       jr.beginArray();
-      List<BagOfPrimitives> bags = new ArrayList<BagOfPrimitives>();
+      List<BagOfPrimitives> bags = new ArrayList<>();
       while(jr.hasNext()) {
         jr.beginObject();
         long longValue = 0;
@@ -101,12 +103,13 @@ public class CollectionsDeserializationBenchmark {
    * setting object values by reflection. We should strive to reduce the discrepancy between this
    * and {@link #timeCollectionsDefault(int)} .
    */
+  @SuppressWarnings("ModifiedButNotUsed")
   public void timeCollectionsReflectionStreaming(int reps) throws Exception {
     for (int i=0; i<reps; ++i) {
       StringReader reader = new StringReader(json);
       JsonReader jr = new JsonReader(reader);
       jr.beginArray();
-      List<BagOfPrimitives> bags = new ArrayList<BagOfPrimitives>();
+      List<BagOfPrimitives> bags = new ArrayList<>();
       while(jr.hasNext()) {
         jr.beginObject();
         BagOfPrimitives bag = new BagOfPrimitives();

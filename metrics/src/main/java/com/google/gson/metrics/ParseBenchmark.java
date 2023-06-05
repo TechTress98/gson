@@ -38,8 +38,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -63,11 +63,13 @@ public final class ParseBenchmark {
     READER_SHORT(new TypeToken<Feed>() {}, new TypeReference<Feed>() {}),
     READER_LONG(new TypeToken<Feed>() {}, new TypeReference<Feed>() {});
 
-    private final Type gsonType;
+    @SuppressWarnings("ImmutableEnumChecker")
+    private final TypeToken<?> gsonType;
+    @SuppressWarnings("ImmutableEnumChecker")
     private final TypeReference<?> jacksonType;
 
     private Document(TypeToken<?> typeToken, TypeReference<?> typeReference) {
-      this.gsonType = typeToken.getType();
+      this.gsonType = typeToken;
       this.jacksonType = typeReference;
     }
   }
@@ -137,7 +139,7 @@ public final class ParseBenchmark {
     ZipFile zipFile = new ZipFile(getResourceFile("/ParseBenchmarkData.zip"));
     try {
       ZipEntry zipEntry = zipFile.getEntry(fileName);
-      Reader reader = new InputStreamReader(zipFile.getInputStream(zipEntry));
+      Reader reader = new InputStreamReader(zipFile.getInputStream(zipEntry), StandardCharsets.UTF_8);
       char[] buffer = new char[8192];
       StringWriter writer = new StringWriter();
       int count;

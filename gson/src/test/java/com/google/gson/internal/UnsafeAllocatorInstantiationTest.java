@@ -15,13 +15,16 @@
  */
 package com.google.gson.internal;
 
-import junit.framework.TestCase;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
+import org.junit.Test;
 
 /**
  * Test unsafe allocator instantiation
  * @author Ugljesa Jovanovic
  */
-public final class UnsafeAllocatorInstantiationTest extends TestCase {
+public final class UnsafeAllocatorInstantiationTest {
 
   public interface Interface {
   }
@@ -36,36 +39,32 @@ public final class UnsafeAllocatorInstantiationTest extends TestCase {
    * Ensure that an {@link AssertionError} is thrown when trying
    * to instantiate an interface
    */
-  public void testInterfaceInstantiation() throws Exception {
-    UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
-    try {
-      unsafeAllocator.newInstance(Interface.class);
-      fail();
-    } catch (AssertionError e) {
-      assertTrue(e.getMessage().startsWith("UnsafeAllocator is used for non-instantiable type"));
-    }
+  @Test
+  public void testInterfaceInstantiation() {
+    AssertionError e = assertThrows(AssertionError.class,
+        () -> UnsafeAllocator.INSTANCE.newInstance(Interface.class));
+
+    assertThat(e).hasMessageThat().startsWith("UnsafeAllocator is used for non-instantiable type");
   }
 
   /**
    * Ensure that an {@link AssertionError} is thrown when trying
    * to instantiate an abstract class
    */
-  public void testAbstractClassInstantiation() throws Exception {
-    UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
-    try {
-      unsafeAllocator.newInstance(AbstractClass.class);
-      fail();
-    } catch (AssertionError e) {
-      assertTrue(e.getMessage().startsWith("UnsafeAllocator is used for non-instantiable type"));
-    }
+  @Test
+  public void testAbstractClassInstantiation() {
+    AssertionError e = assertThrows(AssertionError.class,
+        () -> UnsafeAllocator.INSTANCE.newInstance(AbstractClass.class));
+
+    assertThat(e).hasMessageThat().startsWith("UnsafeAllocator is used for non-instantiable type");
   }
 
   /**
    * Ensure that no exception is thrown when trying to instantiate a concrete class
    */
+  @Test
   public void testConcreteClassInstantiation() throws Exception {
-    UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
-    ConcreteClass instance = unsafeAllocator.newInstance(ConcreteClass.class);
-    assertNotNull(instance);
+    ConcreteClass instance = UnsafeAllocator.INSTANCE.newInstance(ConcreteClass.class);
+    assertThat(instance).isNotNull();
   }
 }

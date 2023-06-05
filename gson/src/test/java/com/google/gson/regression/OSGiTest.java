@@ -15,29 +15,34 @@
  */
 package com.google.gson.regression;
 
-import java.io.InputStream;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static org.junit.Assert.fail;
+
+import com.google.common.base.Splitter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.jar.Manifest;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class OSGiTest extends TestCase {
-    public void testComGoogleGsonAnnotationsPackage() throws Exception {
+public class OSGiTest {
+  @Test
+  public void testComGoogleGsonAnnotationsPackage() throws Exception {
         Manifest mf = findManifest("com.google.gson");
         String importPkg = mf.getMainAttributes().getValue("Import-Package");
-        assertNotNull("Import-Package statement is there", importPkg);
+        assertWithMessage("Import-Package statement is there").that(importPkg).isNotNull();
         assertSubstring("There should be com.google.gson.annotations dependency", importPkg, "com.google.gson.annotations");
     }
 
-    public void testSunMiscImportPackage() throws Exception {
+  @Test
+  public void testSunMiscImportPackage() throws Exception {
         Manifest mf = findManifest("com.google.gson");
         String importPkg = mf.getMainAttributes().getValue("Import-Package");
-        assertNotNull("Import-Package statement is there", importPkg);
-        for (String dep : importPkg.split(",")) {
+    assertWithMessage("Import-Package statement is there").that(importPkg).isNotNull();
+        for (String dep : Splitter.on(',').split(importPkg)) {
             if (dep.contains("sun.misc")) {
                 assertSubstring("sun.misc import is optional", dep, "resolution:=optional");
                 return;
@@ -47,7 +52,7 @@ public class OSGiTest extends TestCase {
     }
 
     private Manifest findManifest(String pkg) throws IOException {
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         for (URL u : Collections.list(getClass().getClassLoader().getResources("META-INF/MANIFEST.MF"))) {
             InputStream is = u.openStream();
             Manifest mf = new Manifest(is);
